@@ -33,7 +33,7 @@ const Navbar = () => {
           <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-neon-purple flex items-center justify-center">
             <Home className="w-4 h-4 text-primary-foreground" />
           </div>
-          <span className="font-heading font-bold text-lg gradient-text">RoomFinder</span>
+          <span className="font-heading font-bold text-lg gradient-text">Havenly Spaces</span>
         </Link>
 
         <div className="hidden md:flex items-center gap-1">
