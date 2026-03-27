@@ -61,7 +61,7 @@ const Footer = () => {
                 <Mail className="w-4 h-4 text-white" /> support@havenlyspaces.com
               </li>
               <li className="flex items-center gap-2 text-sm text-white/72">
-                <Phone className="w-4 h-4 text-white" /> +91 98765 43210
+                <Phone className="w-4 h-4 text-white" /> +91 xxxxxxxxxx
               </li>
               <li className="flex items-center gap-2 text-sm text-white/72">
                 <MapPin className="w-4 h-4 text-white" /> Jabalpur, Madhya Pradesh, India
