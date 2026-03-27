@@ -63,7 +63,7 @@ const RoomDetails = () => {
   );
   const canViewRoom = room && (
     room.approvalStatus === 'approved'
-    || profile?.role === 'admgit commit -m "first commit"in'
+    || profile?.role === 'admin'
     || room.owner_id === user?.id
   );
 
