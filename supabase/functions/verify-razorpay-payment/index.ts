@@ -27,6 +27,13 @@ serve(async (req) => {
     }
 
     const payload = await req.json() as VerifyPaymentPayload;
+    console.info('[verify-razorpay-payment] Verifying payment', {
+      bookingId: payload.bookingId,
+      kind: payload.kind,
+      orderId: payload.razorpay_order_id,
+      paymentId: payload.razorpay_payment_id,
+      metadata: payload.metadata || {},
+    });
     const encoder = new TextEncoder();
     const secretKey = await crypto.subtle.importKey(
       'raw',
@@ -43,16 +50,25 @@ serve(async (req) => {
       throw new Error('Razorpay signature verification failed');
     }
 
+    console.info('[verify-razorpay-payment] Verification successful', {
+      bookingId: payload.bookingId,
+      paymentId: payload.razorpay_payment_id,
+    });
+
     return new Response(JSON.stringify({
       success: true,
       bookingId: payload.bookingId,
       kind: payload.kind,
+      orderId: payload.razorpay_order_id,
+      paymentId: payload.razorpay_payment_id,
+      signature: payload.razorpay_signature,
       verifiedAt: new Date().toISOString(),
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 200,
     });
   } catch (error) {
+    console.error('[verify-razorpay-payment] Failed', error);
     return new Response(JSON.stringify({ success: false, error: (error as Error).message }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 400,

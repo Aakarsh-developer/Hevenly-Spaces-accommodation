@@ -6,11 +6,14 @@ import { useApp } from '@/contexts/AppContext';
 
 const FACILITIES = ['WiFi', 'AC', 'Parking', 'Laundry', 'Kitchen', 'Gym', 'CCTV', 'Power Backup', 'Furnished', 'Geyser'];
 
+// FIX: raised ceiling to 100000 so rooms priced above 10000 are never hidden
+const PRICE_MAX = 100000;
+
 const Rooms = () => {
   const { rooms, roomsLoaded, roomsError } = useApp();
   const [search, setSearch] = useState('');
   const [showFilters, setShowFilters] = useState(false);
-  const [priceRange, setPriceRange] = useState<[number, number]>([0, 10000]);
+  const [priceRange, setPriceRange] = useState<[number, number]>([0, PRICE_MAX]);
   const [selectedFacilities, setSelectedFacilities] = useState<string[]>([]);
   const [roomType, setRoomType] = useState<string>('all');
 
@@ -32,6 +35,12 @@ const Rooms = () => {
       return matchSearch && matchPrice && matchFacilities && matchType;
     });
   }, [priceRange, roomType, search, selectedFacilities, visibleRooms]);
+
+  // Compute the actual max price from real room data so the slider is meaningful
+  const actualMaxPrice = useMemo(
+    () => Math.max(PRICE_MAX, ...visibleRooms.map((r) => r.price)),
+    [visibleRooms],
+  );
 
   return (
     <div className="min-h-screen pt-20 pb-10">
@@ -86,11 +95,13 @@ const Rooms = () => {
               className="mt-4 pt-4 border-t border-border space-y-4"
             >
               <div>
-                <label className="text-sm font-medium mb-2 block">Price Range: Rs{priceRange[0]} - Rs{priceRange[1]}</label>
+                <label className="text-sm font-medium mb-2 block">
+                  Price Range: Rs{priceRange[0].toLocaleString()} - Rs{priceRange[1] >= actualMaxPrice ? 'Any' : priceRange[1].toLocaleString()}
+                </label>
                 <input
                   type="range"
                   min={0}
-                  max={10000}
+                  max={actualMaxPrice}
                   step={500}
                   value={priceRange[1]}
                   onChange={(e) => setPriceRange([priceRange[0], parseInt(e.target.value, 10)])}
@@ -128,12 +139,12 @@ const Rooms = () => {
                 </div>
               </div>
 
-              {(selectedFacilities.length > 0 || roomType !== 'all') && (
+              {(selectedFacilities.length > 0 || roomType !== 'all' || priceRange[1] < actualMaxPrice) && (
                 <button
                   onClick={() => {
                     setSelectedFacilities([]);
                     setRoomType('all');
-                    setPriceRange([0, 10000]);
+                    setPriceRange([0, actualMaxPrice]);
                   }}
                   className="text-xs text-primary flex items-center gap-1 hover:underline"
                 >

@@ -55,7 +55,13 @@ const RoomDetails = () => {
     }
   }, [fetchReviews, room?.id]);
 
-  const existingBooking = user ? bookings.find((entry) => entry.room_id === room?.id && entry.student_id === user.id && entry.status !== 'rejected') : null;
+  const existingBooking = user
+    ? bookings.find((entry) =>
+      entry.room_id === room?.id &&
+      entry.student_id === user.id &&
+      !['rejected', 'completed', 'cancelled'].includes(entry.status),
+    )
+    : null;
   const acceptedBooking = user ? bookings.find((entry) => entry.room_id === room?.id && entry.student_id === user.id && entry.status === 'accepted') : null;
   const existingReview = useMemo(
     () => roomReviews.find((review) => review.booking_id === acceptedBooking?.id),

@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Verify your Havenly Spaces account</title>
+  </head>
+  <body style="margin:0;padding:0;background:#f5f7f5;font-family:Arial,Helvetica,sans-serif;color:#102218;">
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#f5f7f5;padding:24px 12px;">
+      <tr>
+        <td align="center">
+          <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:640px;background:#ffffff;border:1px solid #d8e0da;border-radius:24px;overflow:hidden;">
+            <tr>
+              <td style="padding:28px;background:#14532d;color:#ffffff;">
+                <p style="margin:0;font-size:12px;letter-spacing:0.22em;text-transform:uppercase;opacity:0.82;">Havenly Spaces</p>
+                <h1 style="margin:14px 0 0;font-size:28px;line-height:1.25;">Verify your account</h1>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:28px;">
+                <p style="margin:0;font-size:15px;line-height:1.8;color:#102218;">
+                  Welcome to Havenly Spaces. Confirm your email address to finish setting up your account and continue safely.
+                </p>
+                <div style="margin-top:24px;">
+                  <a href="{{ .ConfirmationURL }}" style="display:inline-block;padding:12px 20px;border-radius:999px;background:#14532d;color:#ffffff;font-size:14px;font-weight:700;text-decoration:none;">
+                    Verify Email
+                  </a>
+                </div>
+                <p style="margin:24px 0 0;font-size:13px;line-height:1.7;color:#5f6e64;">
+                  If the button does not work, paste this link into your browser:
+                  <br />
+                  <span style="word-break:break-all;">{{ .ConfirmationURL }}</span>
+                </p>
+                <div style="margin-top:26px;padding-top:18px;border-top:1px solid #d8e0da;">
+                  <p style="margin:0;font-size:13px;font-weight:700;color:#102218;">Security note</p>
+                  <p style="margin:8px 0 0;font-size:13px;line-height:1.7;color:#5f6e64;">
+                    If you did not create this account, you can ignore this email.
+                  </p>
+                </div>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>

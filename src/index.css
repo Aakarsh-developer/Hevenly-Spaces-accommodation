@@ -6,50 +6,54 @@
 
 @layer base {
   :root {
-    --background: 138 28% 97%;
-    --foreground: 144 30% 12%;
+    --background: 214 80% 97%;
+    --foreground: 220 45% 10%;
 
     --card: 0 0% 100%;
-    --card-foreground: 144 30% 12%;
+    --card-foreground: 220 45% 10%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 144 30% 12%;
+    --popover-foreground: 220 45% 10%;
 
-    --primary: 149 53% 26%;
+    --primary: 221 83% 42%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 136 20% 92%;
-    --secondary-foreground: 149 30% 20%;
+    --secondary: 214 50% 93%;
+    --secondary-foreground: 221 55% 22%;
 
-    --muted: 136 18% 93%;
-    --muted-foreground: 149 12% 39%;
+    --muted: 214 40% 94%;
+    --muted-foreground: 220 20% 42%;
 
-    --accent: 143 38% 34%;
+    --accent: 210 80% 52%;
     --accent-foreground: 0 0% 100%;
 
     --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 138 18% 86%;
-    --input: 138 18% 86%;
-    --ring: 149 53% 26%;
+    --border: 214 30% 87%;
+    --input: 214 30% 87%;
+    --ring: 221 83% 42%;
 
     --radius: 0.75rem;
 
-    --neon-blue: 152 48% 40%;
-    --neon-purple: 143 34% 30%;
-    --neon-cyan: 162 42% 36%;
-    --glass-bg: 0 0% 100% / 0.78;
-    --glass-border: 138 16% 84%;
+    --neon-blue: 221 83% 58%;
+    --neon-purple: 230 70% 58%;
+    --neon-cyan: 199 80% 52%;
+    --glass-bg: 0 0% 100% / 0.80;
+    --glass-border: 214 28% 85%;
 
     --sidebar-background: 0 0% 100%;
-    --sidebar-foreground: 144 30% 12%;
-    --sidebar-primary: 149 53% 26%;
+    --sidebar-foreground: 220 45% 10%;
+    --sidebar-primary: 221 83% 42%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 136 18% 94%;
-    --sidebar-accent-foreground: 144 30% 12%;
-    --sidebar-border: 138 18% 86%;
-    --sidebar-ring: 149 53% 26%;
+    --sidebar-accent: 214 40% 94%;
+    --sidebar-accent-foreground: 220 45% 10%;
+    --sidebar-border: 214 30% 87%;
+    --sidebar-ring: 221 83% 42%;
+
+    /* cursor spotlight defaults (offscreen until JS runs) */
+    --sx: -800px;
+    --sy: -800px;
   }
 }
 
@@ -57,26 +61,67 @@
   * {
     @apply border-border;
   }
+
+  /* page content must sit above the spotlight overlay (z-index: 1) */
+  #root {
+    position: relative;
+    z-index: 2;
+  }
+
   body {
     @apply bg-background text-foreground font-body antialiased;
+    background-color: hsl(214 80% 97%);
     background-image:
-      radial-gradient(circle at top left, hsl(var(--primary) / 0.06), transparent 28%),
-      radial-gradient(circle at bottom right, hsl(var(--accent) / 0.08), transparent 32%);
+      radial-gradient(ellipse 72% 48% at 0% 0%,    hsl(221 85% 82% / 0.80), transparent),
+      radial-gradient(ellipse 55% 38% at 100% 0%,  hsl(199 80% 84% / 0.65), transparent),
+      radial-gradient(ellipse 90% 60% at 50% 40%,  hsl(214 75% 92% / 0.70), transparent),
+      radial-gradient(ellipse 65% 46% at 100% 100%,hsl(230 70% 84% / 0.65), transparent),
+      radial-gradient(ellipse 45% 32% at 0% 100%,  hsl(210 72% 82% / 0.58), transparent);
+    background-attachment: fixed;
   }
 }
 
 @layer components {
+  /* ── Per-page gradient overlay ── */
+  .page-gradient {
+    position: relative;
+    isolation: isolate;
+  }
+  .page-gradient::before {
+    content: '';
+    pointer-events: none;
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    background:
+      radial-gradient(ellipse 80% 55% at 12% 8%,   hsl(221 80% 78% / 0.62), transparent),
+      radial-gradient(ellipse 60% 46% at 88% 6%,   hsl(199 76% 80% / 0.52), transparent),
+      radial-gradient(ellipse 70% 52% at 50% 96%,  hsl(210 72% 80% / 0.55), transparent),
+      radial-gradient(ellipse 48% 38% at 94% 54%,  hsl(230 66% 82% / 0.48), transparent),
+      radial-gradient(ellipse 52% 42% at 4%  72%,  hsl(221 74% 80% / 0.52), transparent);
+    animation: blue-breathe 14s ease-in-out infinite alternate;
+  }
+
+  @keyframes blue-breathe {
+    0%   { opacity: 0.72; }
+    50%  { opacity: 1;    }
+    100% { opacity: 0.80; }
+  }
+
   .glass {
     @apply bg-card/90 border border-border rounded-2xl shadow-sm backdrop-blur-xl;
+    background: hsl(214 60% 99% / 0.90);
   }
   .glass-strong {
     @apply bg-card/95 border border-border rounded-2xl shadow-md backdrop-blur-xl;
+    background: hsl(214 60% 100% / 0.96);
   }
+
   .neon-glow {
-    box-shadow: 0 4px 24px hsl(var(--primary) / 0.12);
+    box-shadow: 0 4px 24px hsl(var(--primary) / 0.18);
   }
   .neon-glow-sm {
-    box-shadow: 0 2px 12px hsl(var(--primary) / 0.08);
+    box-shadow: 0 2px 12px hsl(var(--primary) / 0.13);
   }
   .gradient-text {
     @apply bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent;
@@ -88,13 +133,14 @@
     border: 1px solid transparent;
   }
   .btn-neon {
-    @apply px-6 py-3 rounded-xl font-heading font-semibold bg-gradient-to-r from-primary to-accent text-primary-foreground 
-           transition-all duration-300 hover:shadow-lg hover:shadow-primary/20 hover:scale-[1.02] active:scale-[0.98];
+    @apply px-6 py-3 rounded-xl font-heading font-semibold bg-gradient-to-r from-primary to-accent text-primary-foreground
+           transition-all duration-300 hover:shadow-lg hover:shadow-primary/25 hover:scale-[1.02] active:scale-[0.98];
   }
   .btn-neon-outline {
-    @apply px-6 py-3 rounded-xl font-heading font-semibold border border-primary text-primary 
+    @apply px-6 py-3 rounded-xl font-heading font-semibold border border-primary text-primary
            transition-all duration-300 hover:bg-primary/5 hover:shadow-sm;
   }
+
   .status-available {
     @apply bg-emerald-50 text-emerald-700 border border-emerald-200;
   }
@@ -104,14 +150,18 @@
   .status-pending {
     @apply bg-amber-50 text-amber-700 border border-amber-200;
   }
+
+  /* Hero: light navy overlay — image breathes through clearly */
   .hero-backdrop {
     background:
-      linear-gradient(90deg, hsl(149 53% 16% / 0.86) 0%, hsl(149 45% 20% / 0.68) 42%, hsl(149 32% 18% / 0.38) 100%),
+      linear-gradient(90deg, hsl(221 83% 14% / 0.58) 0%, hsl(210 80% 20% / 0.38) 48%, hsl(199 72% 20% / 0.12) 100%),
       url('https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&w=1600&q=80') center/cover no-repeat;
   }
+
+  /* Auth showcase: light navy overlay — image shows through clearly */
   .auth-showcase {
     background:
-      linear-gradient(180deg, hsl(149 53% 18% / 0.22), hsl(149 53% 18% / 0.62)),
+      linear-gradient(180deg, hsl(221 83% 16% / 0.08), hsl(221 83% 16% / 0.38)),
       url('https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?auto=format&fit=crop&w=1200&q=80') center/cover no-repeat;
   }
 }

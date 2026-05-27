@@ -20,14 +20,17 @@ const AdminDashboard = () => {
     paymentTransactions,
     allUsers,
     roomReports,
+    userReports,
     deleteRoom,
     deleteUser,
     updateRoomStatus,
     updateRoomApprovalStatus,
     fetchAllUsers,
     fetchRoomReports,
+    fetchUserReports,
     updateUserRole,
     updateRoomReportStatus,
+    updateUserReportStatus,
   } = useApp();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('overview');
@@ -43,8 +46,9 @@ const AdminDashboard = () => {
     if (profile?.role === 'admin') {
       void fetchAllUsers();
       void fetchRoomReports();
+      void fetchUserReports();
     }
-  }, [fetchAllUsers, fetchRoomReports, loading, navigate, profile, user]);
+  }, [fetchAllUsers, fetchRoomReports, fetchUserReports, loading, navigate, profile, user]);
 
   const analytics = useMemo(() => {
     const approvedRooms = rooms.filter((room) => room.approvalStatus === 'approved');
@@ -53,6 +57,7 @@ const AdminDashboard = () => {
     const paidBookings = bookings.filter((booking) => booking.payment_status === 'paid');
     const failedPayments = bookings.filter((booking) => booking.payment_status === 'failed');
     const openReports = roomReports.filter((report) => report.status === 'open');
+    const openUserReports = userReports.filter((report) => report.status === 'open');
     const students = allUsers.filter((entry) => entry.role === 'student').length;
     const owners = allUsers.filter((entry) => entry.role === 'owner').length;
     const admins = allUsers.filter((entry) => entry.role === 'admin').length;
@@ -102,6 +107,7 @@ const AdminDashboard = () => {
       paidBookings,
       failedPayments,
       openReports,
+      openUserReports,
       bookingStatusData,
       roomApprovalData,
       userRoleData,
@@ -112,7 +118,7 @@ const AdminDashboard = () => {
       averageRating: approvedRooms.length > 0 ? (approvedRooms.reduce((sum, room) => sum + room.rating, 0) / approvedRooms.length).toFixed(1) : '0.0',
       collectedRevenue: paidBookings.reduce((sum, booking) => sum + (rooms.find((item) => item.id === booking.room_id)?.price || 0), 0),
     };
-  }, [allUsers, bookings, roomReports, rooms]);
+  }, [allUsers, bookings, roomReports, rooms, userReports]);
 
   if (loading) return <div className="min-h-screen pt-20 flex items-center justify-center"><p>Loading...</p></div>;
   if (!user || !profile || profile.role !== 'admin') return null;
@@ -120,7 +126,7 @@ const AdminDashboard = () => {
   const stats = [
     { label: 'Total Rooms', value: rooms.length, icon: Building, color: 'from-primary to-neon-blue' },
     { label: 'Pending Approval', value: analytics.pendingRooms.length, icon: Home, color: 'from-amber-500 to-orange-500' },
-    { label: 'Open Reports', value: analytics.openReports.length, icon: ShieldAlert, color: 'from-rose-500 to-orange-500' },
+    { label: 'Open Reports', value: analytics.openReports.length + analytics.openUserReports.length, icon: ShieldAlert, color: 'from-rose-500 to-orange-500' },
     { label: 'Total Users', value: allUsers.length, icon: Users, color: 'from-neon-purple to-primary' },
     { label: 'Active Bookings', value: bookings.filter((booking) => booking.status === 'accepted').length, icon: TrendingUp, color: 'from-neon-cyan to-primary' },
     { label: 'Collected Revenue', value: `Rs${analytics.collectedRevenue.toLocaleString()}`, icon: DollarSign, color: 'from-emerald-500 to-neon-cyan' },
@@ -169,6 +175,16 @@ const AdminDashboard = () => {
     }
 
     toast.error('Failed to update report');
+  };
+
+  const handleUserReportStatusChange = async (reportId: string, status: 'reviewed' | 'resolved') => {
+    const success = await updateUserReportStatus(reportId, status);
+    if (success) {
+      toast.success(`User report marked ${status}`);
+      return;
+    }
+
+    toast.error('Failed to update user report');
   };
 
   const handleDeleteUser = async (userId: string) => {
@@ -500,59 +516,110 @@ const AdminDashboard = () => {
             )}
 
             {activeTab === 'reports' && (
-              <div className="glass p-6">
-                <h3 className="font-heading font-semibold mb-4">Room Reports ({roomReports.length})</h3>
-                {roomReports.length === 0 ? (
-                  <p className="text-sm text-muted-foreground">No reports yet.</p>
-                ) : (
-                  <div className="space-y-3">
-                    {roomReports.map((report) => (
-                      <div key={report.id} className="rounded-xl bg-secondary/50 p-4 space-y-3">
-                        <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-3">
-                          <div>
-                            <p className="text-sm font-medium">{report.room_title}</p>
-                            <p className="text-xs text-muted-foreground">Reported by {report.reporter_name} on {new Date(report.created_at).toLocaleDateString()}</p>
+              <div className="glass p-6 space-y-8">
+                <div>
+                  <h3 className="font-heading font-semibold mb-4">Room Reports ({roomReports.length})</h3>
+                  {roomReports.length === 0 ? (
+                    <p className="text-sm text-muted-foreground">No room reports yet.</p>
+                  ) : (
+                    <div className="space-y-3">
+                      {roomReports.map((report) => (
+                        <div key={report.id} className="rounded-xl bg-secondary/50 p-4 space-y-3">
+                          <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-3">
+                            <div>
+                              <p className="text-sm font-medium">{report.room_title}</p>
+                              <p className="text-xs text-muted-foreground">Reported by {report.reporter_name} on {new Date(report.created_at).toLocaleDateString()}</p>
+                            </div>
+                            <span className={`px-3 py-1 rounded-full text-xs font-semibold w-fit ${report.status === 'open' ? 'status-pending' : report.status === 'resolved' ? 'status-available' : 'bg-secondary text-muted-foreground'}`}>
+                              {report.status}
+                            </span>
                           </div>
-                          <span className={`px-3 py-1 rounded-full text-xs font-semibold w-fit ${report.status === 'open' ? 'status-pending' : report.status === 'resolved' ? 'status-available' : 'bg-secondary text-muted-foreground'}`}>
-                            {report.status}
-                          </span>
-                        </div>
-                        <div>
-                          <p className="text-xs uppercase tracking-wide text-muted-foreground mb-1">Reason</p>
-                          <p className="text-sm">{report.reason}</p>
-                        </div>
-                        {report.details && (
                           <div>
-                            <p className="text-xs uppercase tracking-wide text-muted-foreground mb-1">Details</p>
-                            <p className="text-sm text-muted-foreground whitespace-pre-wrap">{report.details}</p>
+                            <p className="text-xs uppercase tracking-wide text-muted-foreground mb-1">Reason</p>
+                            <p className="text-sm">{report.reason}</p>
                           </div>
-                        )}
-                        <div className="flex flex-wrap gap-2">
-                          <button
-                            onClick={() => void handleReportStatusChange(report.id, 'reviewed')}
-                            disabled={report.status === 'reviewed'}
-                            className="text-xs px-3 py-1 rounded-full bg-secondary border border-border disabled:opacity-60"
-                          >
-                            Mark Reviewed
-                          </button>
-                          <button
-                            onClick={() => void handleReportStatusChange(report.id, 'resolved')}
-                            disabled={report.status === 'resolved'}
-                            className="text-xs px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-600 disabled:opacity-60"
-                          >
-                            Resolve
-                          </button>
-                          <button
-                            onClick={() => void handleRoomApprovalChange(report.room_id, 'rejected')}
-                            className="text-xs px-3 py-1 rounded-full bg-destructive/10 text-destructive"
-                          >
-                            Reject Room
-                          </button>
+                          {report.details && (
+                            <div>
+                              <p className="text-xs uppercase tracking-wide text-muted-foreground mb-1">Details</p>
+                              <p className="text-sm text-muted-foreground whitespace-pre-wrap">{report.details}</p>
+                            </div>
+                          )}
+                          <div className="flex flex-wrap gap-2">
+                            <button
+                              onClick={() => void handleReportStatusChange(report.id, 'reviewed')}
+                              disabled={report.status === 'reviewed'}
+                              className="text-xs px-3 py-1 rounded-full bg-secondary border border-border disabled:opacity-60"
+                            >
+                              Mark Reviewed
+                            </button>
+                            <button
+                              onClick={() => void handleReportStatusChange(report.id, 'resolved')}
+                              disabled={report.status === 'resolved'}
+                              className="text-xs px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-600 disabled:opacity-60"
+                            >
+                              Resolve
+                            </button>
+                            <button
+                              onClick={() => void handleRoomApprovalChange(report.room_id, 'rejected')}
+                              className="text-xs px-3 py-1 rounded-full bg-destructive/10 text-destructive"
+                            >
+                              Reject Room
+                            </button>
+                          </div>
                         </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                <div>
+                  <h3 className="font-heading font-semibold mb-4">User Reports ({userReports.length})</h3>
+                  {userReports.length === 0 ? (
+                    <p className="text-sm text-muted-foreground">No user reports yet.</p>
+                  ) : (
+                    <div className="space-y-3">
+                      {userReports.map((report) => (
+                        <div key={report.id} className="rounded-xl bg-secondary/50 p-4 space-y-3">
+                          <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-3">
+                            <div>
+                              <p className="text-sm font-medium">{report.reporter_name} reported {report.reported_user_name}</p>
+                              <p className="text-xs text-muted-foreground">{new Date(report.created_at).toLocaleDateString()}</p>
+                            </div>
+                            <span className={`px-3 py-1 rounded-full text-xs font-semibold w-fit ${report.status === 'open' ? 'status-pending' : report.status === 'resolved' ? 'status-available' : 'bg-secondary text-muted-foreground'}`}>
+                              {report.status}
+                            </span>
+                          </div>
+                          <div>
+                            <p className="text-xs uppercase tracking-wide text-muted-foreground mb-1">Category</p>
+                            <p className="text-sm capitalize">{report.category}</p>
+                          </div>
+                          {report.details && (
+                            <div>
+                              <p className="text-xs uppercase tracking-wide text-muted-foreground mb-1">Details</p>
+                              <p className="text-sm text-muted-foreground whitespace-pre-wrap">{report.details}</p>
+                            </div>
+                          )}
+                          <div className="flex flex-wrap gap-2">
+                            <button
+                              onClick={() => void handleUserReportStatusChange(report.id, 'reviewed')}
+                              disabled={report.status === 'reviewed'}
+                              className="text-xs px-3 py-1 rounded-full bg-secondary border border-border disabled:opacity-60"
+                            >
+                              Mark Reviewed
+                            </button>
+                            <button
+                              onClick={() => void handleUserReportStatusChange(report.id, 'resolved')}
+                              disabled={report.status === 'resolved'}
+                              className="text-xs px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-600 disabled:opacity-60"
+                            >
+                              Resolve
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
             )}
 

@@ -9,13 +9,19 @@ const ProfileSettings = () => {
   const { profile, uploadAvatar, updateProfile } = useApp();
   const [name, setName] = useState(profile?.name || '');
   const [avatarUrl, setAvatarUrl] = useState(profile?.avatar_url || '');
+  const [bio, setBio] = useState(profile?.bio || '');
+  const [mobileNumber, setMobileNumber] = useState(profile?.mobile_number || '');
+  const [upiId, setUpiId] = useState(profile?.upi_id || '');
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
     setName(profile?.name || '');
     setAvatarUrl(profile?.avatar_url || '');
-  }, [profile?.avatar_url, profile?.name]);
+    setBio(profile?.bio || '');
+    setMobileNumber(profile?.mobile_number || '');
+    setUpiId(profile?.upi_id || '');
+  }, [profile?.avatar_url, profile?.bio, profile?.mobile_number, profile?.name, profile?.upi_id]);
 
   const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -53,13 +59,16 @@ const ProfileSettings = () => {
     const success = await updateProfile({
       name: name.trim(),
       avatar_url: avatarUrl || undefined,
+      bio: bio.trim() || undefined,
+      mobile_number: mobileNumber.trim(),
+      upi_id: upiId.trim() || undefined,
     });
     setSaving(false);
 
-    if (success) {
+    if (success.success) {
       toast.success('Profile updated');
     } else {
-      toast.error('Failed to update profile');
+      toast.error(success.error || 'Failed to update profile');
     }
   };
 
@@ -107,6 +116,43 @@ const ProfileSettings = () => {
               className="w-full cursor-not-allowed rounded-xl border border-border bg-secondary/60 px-4 py-3 text-muted-foreground"
             />
           </div>
+
+          <div className="space-y-2">
+            <label className="text-sm font-medium">Mobile Number</label>
+            <input
+              type="tel"
+              value={mobileNumber}
+              onChange={(e) => setMobileNumber(e.target.value)}
+              className="w-full rounded-xl border border-border bg-secondary px-4 py-3 text-foreground placeholder:text-muted-foreground transition-colors focus:border-primary focus:outline-none"
+              placeholder="+919876543210"
+            />
+            <p className="text-xs text-muted-foreground">Required for booking, rent reminders, payment updates, and SMS alerts.</p>
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-sm font-medium">Bio</label>
+            <textarea
+              rows={3}
+              value={bio}
+              onChange={(e) => setBio(e.target.value)}
+              className="w-full rounded-xl border border-border bg-secondary px-4 py-3 text-foreground placeholder:text-muted-foreground transition-colors focus:border-primary focus:outline-none"
+              placeholder="Tell people a little about yourself"
+            />
+          </div>
+
+          {profile?.role === 'owner' && (
+            <div className="space-y-2">
+              <label className="text-sm font-medium">UPI ID / Payment ID</label>
+              <input
+                type="text"
+                value={upiId}
+                onChange={(e) => setUpiId(e.target.value)}
+                className="w-full rounded-xl border border-border bg-secondary px-4 py-3 text-foreground placeholder:text-muted-foreground transition-colors focus:border-primary focus:outline-none"
+                placeholder="owner@upi"
+              />
+              <p className="text-xs text-muted-foreground">Required for owner-side payment verification and settlement reference.</p>
+            </div>
+          )}
 
           <button type="submit" disabled={saving || uploading} className="btn-neon inline-flex items-center gap-2 disabled:opacity-60">
             <Save className="h-4 w-4" />

@@ -84,11 +84,14 @@ export type Database = {
         Row: {
           created_at: string
           id: string
+          last_successful_payment_date: string | null
+          next_payment_date: string | null
           owner_id: string
           owner_last_read_at: string | null
           paid_at: string | null
           payment_reference: string | null
           payment_status: string
+          rent_due_date: string | null
           room_id: string
           status: string
           student_last_read_at: string | null
@@ -97,11 +100,14 @@ export type Database = {
         Insert: {
           created_at?: string
           id?: string
+          last_successful_payment_date?: string | null
+          next_payment_date?: string | null
           owner_id: string
           owner_last_read_at?: string | null
           paid_at?: string | null
           payment_reference?: string | null
           payment_status?: string
+          rent_due_date?: string | null
           room_id: string
           status?: string
           student_last_read_at?: string | null
@@ -110,11 +116,14 @@ export type Database = {
         Update: {
           created_at?: string
           id?: string
+          last_successful_payment_date?: string | null
+          next_payment_date?: string | null
           owner_id?: string
           owner_last_read_at?: string | null
           paid_at?: string | null
           payment_reference?: string | null
           payment_status?: string
+          rent_due_date?: string | null
           room_id?: string
           status?: string
           student_last_read_at?: string | null
@@ -189,27 +198,99 @@ export type Database = {
         }
         Relationships: []
       }
+      payment_date_change_requests: {
+        Row: {
+          booking_id: string
+          created_at: string
+          current_due_date: string
+          id: string
+          payment_request_id: string | null
+          reason: string | null
+          requested_due_date: string
+          requester_id: string
+          resolution_note: string | null
+          resolved_at: string | null
+          responder_id: string | null
+          status: string
+        }
+        Insert: {
+          booking_id: string
+          created_at?: string
+          current_due_date: string
+          id?: string
+          payment_request_id?: string | null
+          reason?: string | null
+          requested_due_date: string
+          requester_id: string
+          resolution_note?: string | null
+          resolved_at?: string | null
+          responder_id?: string | null
+          status?: string
+        }
+        Update: {
+          booking_id?: string
+          created_at?: string
+          current_due_date?: string
+          id?: string
+          payment_request_id?: string | null
+          reason?: string | null
+          requested_due_date?: string
+          requester_id?: string
+          resolution_note?: string | null
+          resolved_at?: string | null
+          responder_id?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payment_date_change_requests_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payment_date_change_requests_payment_request_id_fkey"
+            columns: ["payment_request_id"]
+            isOneToOne: false
+            referencedRelation: "monthly_payment_requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
+          bio: string | null
           created_at: string
           email: string
+          full_name: string | null
           id: string
+          mobile_number: string | null
           name: string
+          upi_id: string | null
         }
         Insert: {
           avatar_url?: string | null
+          bio?: string | null
           created_at?: string
           email: string
+          full_name?: string | null
           id: string
+          mobile_number?: string | null
           name: string
+          upi_id?: string | null
         }
         Update: {
           avatar_url?: string | null
+          bio?: string | null
           created_at?: string
           email?: string
+          full_name?: string | null
           id?: string
+          mobile_number?: string | null
           name?: string
+          upi_id?: string | null
         }
         Relationships: []
       }
@@ -380,6 +461,56 @@ export type Database = {
         }
         Relationships: []
       }
+      user_reports: {
+        Row: {
+          booking_id: string | null
+          category: string
+          created_at: string
+          details: string | null
+          id: string
+          reported_user_id: string
+          reporter_id: string
+          resolution_note: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+        }
+        Insert: {
+          booking_id?: string | null
+          category: string
+          created_at?: string
+          details?: string | null
+          id?: string
+          reported_user_id: string
+          reporter_id: string
+          resolution_note?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+        }
+        Update: {
+          booking_id?: string | null
+          category?: string
+          created_at?: string
+          details?: string | null
+          id?: string
+          reported_user_id?: string
+          reporter_id?: string
+          resolution_note?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_reports_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       wishlists: {
         Row: {
           created_at: string
@@ -419,9 +550,12 @@ export type Database = {
           due_date: string
           due_month: string
           id: string
+          note: string | null
           owner_id: string
+          owner_response_note: string | null
           paid_at: string | null
           payment_reference: string | null
+          period_label: string | null
           status: string
           student_id: string
           transaction_id: string | null
@@ -435,9 +569,12 @@ export type Database = {
           due_date: string
           due_month: string
           id?: string
+          note?: string | null
           owner_id: string
+          owner_response_note?: string | null
           paid_at?: string | null
           payment_reference?: string | null
+          period_label?: string | null
           status?: string
           student_id: string
           transaction_id?: string | null
@@ -451,9 +588,12 @@ export type Database = {
           due_date?: string
           due_month?: string
           id?: string
+          note?: string | null
           owner_id?: string
+          owner_response_note?: string | null
           paid_at?: string | null
           payment_reference?: string | null
+          period_label?: string | null
           status?: string
           student_id?: string
           transaction_id?: string | null
@@ -483,12 +623,21 @@ export type Database = {
           id: string
           kind: string
           metadata: Json
+          order_id: string | null
+          owner_confirmed_at: string | null
+          owner_confirmed_by: string | null
           payee_id: string
+          payer_email: string | null
+          payer_name: string | null
+          payer_phone: string | null
           payer_id: string
+          payment_id: string | null
           payment_request_id: string | null
+          payment_signature: string | null
           provider: string
           reference: string
           status: string
+          verified_at: string | null
         }
         Insert: {
           amount: number
@@ -497,12 +646,21 @@ export type Database = {
           id?: string
           kind: string
           metadata?: Json
+          order_id?: string | null
+          owner_confirmed_at?: string | null
+          owner_confirmed_by?: string | null
           payee_id: string
+          payer_email?: string | null
+          payer_name?: string | null
+          payer_phone?: string | null
           payer_id: string
+          payment_id?: string | null
           payment_request_id?: string | null
+          payment_signature?: string | null
           provider?: string
           reference: string
           status?: string
+          verified_at?: string | null
         }
         Update: {
           amount?: number
@@ -511,12 +669,21 @@ export type Database = {
           id?: string
           kind?: string
           metadata?: Json
+          order_id?: string | null
+          owner_confirmed_at?: string | null
+          owner_confirmed_by?: string | null
           payee_id?: string
+          payer_email?: string | null
+          payer_name?: string | null
+          payer_phone?: string | null
           payer_id?: string
+          payment_id?: string | null
           payment_request_id?: string | null
+          payment_signature?: string | null
           provider?: string
           reference?: string
           status?: string
+          verified_at?: string | null
         }
         Relationships: [
           {
@@ -544,17 +711,21 @@ export type Database = {
         Args: { target_user_id: string }
         Returns: undefined
       }
-      admin_set_user_role: {
-        Args: {
-          new_role: Database["public"]["Enums"]["app_role"]
-          target_user_id: string
+        admin_set_user_role: {
+          Args: {
+            new_role: Database["public"]["Enums"]["app_role"]
+            target_user_id: string
+          }
+          Returns: undefined
         }
-        Returns: undefined
-      }
-      get_user_role: {
-        Args: { _user_id: string }
-        Returns: Database["public"]["Enums"]["app_role"]
-      }
+        ensure_user_profile: {
+          Args: Record<PropertyKey, never>
+          Returns: Database["public"]["Tables"]["profiles"]["Row"]
+        }
+        get_user_role: {
+          Args: { _user_id: string }
+          Returns: Database["public"]["Enums"]["app_role"]
+        }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
