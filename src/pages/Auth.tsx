@@ -1,14 +1,16 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Mail, Lock, User, Eye, EyeOff, Home, KeyRound, ArrowLeft } from 'lucide-react';
-import { useApp } from '@/contexts/AppContext';
-import { passwordRecoveryService } from '@/lib/authRecovery';
+import { Mail, Lock, User, Eye, EyeOff, Home, ArrowLeft } from 'lucide-react';
 import { toast } from 'sonner';
+import { useApp } from '@/contexts/AppContext';
+import { supabase } from '@/integrations/supabase/client';
+import { getPasswordResetRedirectUrl, passwordRecoveryService } from '@/lib/authRecovery';
 
-type AuthMode = 'login' | 'signup' | 'forgot' | 'verify' | 'reset';
+type AuthMode = 'login' | 'signup' | 'forgot' | 'reset';
 
 const PASSWORD_MIN_LENGTH = 6;
+const RECOVERY_SESSION_KEY = 'havenly-password-recovery-active';
 
 const Auth = () => {
   const [mode, setMode] = useState<AuthMode>('login');
@@ -18,12 +20,13 @@ const Auth = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [recoveryCode, setRecoveryCode] = useState('');
   const [role, setRole] = useState<'student' | 'owner'>('student');
   const [submitting, setSubmitting] = useState(false);
   const [recoveryReady, setRecoveryReady] = useState(false);
   const [verifyingRecovery, setVerifyingRecovery] = useState(false);
   const [recoveryCooldownUntil, setRecoveryCooldownUntil] = useState<number>(0);
+  const [recoveryRequestedForEmail, setRecoveryRequestedForEmail] = useState('');
+  const recoveryToastShownRef = useRef(false);
   const { login, signup } = useApp();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -51,48 +54,135 @@ const Auth = () => {
     setSearchParams({});
   }, [searchParams, setSearchParams]);
 
-  // Handle both recovery link clicks and token-hash verification.
   useEffect(() => {
-    const tokenHash = searchParams.get('token_hash');
+    const recoveryModeRequested = searchParams.get('mode') === 'reset';
+    const hash = typeof window !== 'undefined' ? window.location.hash.slice(1) : '';
+    const hashParams = new URLSearchParams(hash);
+    const hasRecoveryParams =
+      searchParams.get('type') === 'recovery' ||
+      searchParams.has('code') ||
+      hashParams.get('type') === 'recovery' ||
+      hashParams.has('access_token') ||
+      hashParams.has('refresh_token');
+    const hasStoredRecoveryState =
+      typeof window !== 'undefined' && window.sessionStorage.getItem(RECOVERY_SESSION_KEY) === 'true';
 
-    // Only process if we have a token hash.
-    if (!tokenHash) return;
-    if (recoveryReady || verifyingRecovery) return;
+    if (!recoveryModeRequested) return;
+
+    let isActive = true;
+
+    const cleanRecoveryUrl = () => {
+      if (typeof window === 'undefined') return;
+      const nextUrl = `${window.location.pathname}?mode=reset`;
+      window.history.replaceState({}, document.title, nextUrl);
+    };
+
+    const markRecoveryReady = () => {
+      if (!isActive) return;
+      if (typeof window !== 'undefined') {
+        window.sessionStorage.setItem(RECOVERY_SESSION_KEY, 'true');
+      }
+      cleanRecoveryUrl();
+      setMode('reset');
+      setRecoveryReady(true);
+      setVerifyingRecovery(false);
+      if (!recoveryToastShownRef.current) {
+        recoveryToastShownRef.current = true;
+        toast.success('Recovery link verified. You can set a new password now.');
+      }
+    };
+
+    const failRecoveryLink = () => {
+      if (!isActive) return;
+      if (typeof window !== 'undefined') {
+        window.sessionStorage.removeItem(RECOVERY_SESSION_KEY);
+      }
+      setRecoveryReady(false);
+      setVerifyingRecovery(false);
+      recoveryToastShownRef.current = false;
+      setSearchParams({});
+      setMode('forgot');
+      toast.error('This recovery link is invalid or expired. Please request a new one.');
+    };
+
+    console.info('[password-reset] Recovery flow detected on Auth page', {
+      hasRecoveryParams,
+      hasStoredRecoveryState,
+      search: searchParams.toString(),
+    });
 
     setMode('reset');
     setVerifyingRecovery(true);
 
-    void passwordRecoveryService.currentProvider.verifyTokenHash(tokenHash).then((result) => {
-      setVerifyingRecovery(false);
-      if (result.success) {
-        setRecoveryReady(true);
-        // Clean the URL so token_hash is not reused on refresh.
-        setSearchParams({});
-        toast.success('Recovery link verified. You can set a new password now.');
-        return;
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      console.info('[password-reset] Auth state changed during recovery', {
+        event,
+        hasSession: !!session,
+      });
+
+      if ((event === 'PASSWORD_RECOVERY' || event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') && session) {
+        markRecoveryReady();
       }
-      toast.error(result.error || 'This recovery link is invalid or expired.');
-      setRecoveryReady(false);
-      setMode('forgot');
-      setSearchParams({});
     });
-  }, [recoveryReady, searchParams, setSearchParams, verifyingRecovery]);
+
+    const checkRecoverySession = async () => {
+      for (let attempt = 1; attempt <= 8; attempt += 1) {
+        const { data, error } = await supabase.auth.getSession();
+        console.info('[password-reset] Recovery session check', {
+          attempt,
+          hasSession: !!data.session,
+          error: error?.message,
+        });
+
+        if (!isActive) return;
+        if (data.session) {
+          markRecoveryReady();
+          return;
+        }
+
+        await new Promise((resolve) => window.setTimeout(resolve, 250));
+      }
+
+      failRecoveryLink();
+    };
+
+    void checkRecoverySession();
+
+    return () => {
+      isActive = false;
+      subscription.unsubscribe();
+    };
+  }, [searchParams, setSearchParams]);
 
   const setAuthMode = (nextMode: AuthMode) => {
     setMode(nextMode);
     setPassword('');
     setConfirmPassword('');
-    if (nextMode !== 'verify') setRecoveryCode('');
-    if (nextMode !== 'reset') setRecoveryReady(false);
+    if (nextMode !== 'forgot') {
+      setRecoveryRequestedForEmail('');
+      setRecoveryCooldownUntil(0);
+    }
+    if (nextMode !== 'reset') {
+      setRecoveryReady(false);
+      recoveryToastShownRef.current = false;
+      if (typeof window !== 'undefined') {
+        window.sessionStorage.removeItem(RECOVERY_SESSION_KEY);
+      }
+    }
   };
 
   const handlePrimarySubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (submitting) return;
 
-    if (mode === 'forgot') { await handleForgotPassword(); return; }
-    if (mode === 'verify') { await handleVerifyRecoveryCode(); return; }
-    if (mode === 'reset')  { await handleResetPassword(); return; }
+    if (mode === 'forgot') {
+      await handleForgotPassword();
+      return;
+    }
+    if (mode === 'reset') {
+      await handleResetPassword();
+      return;
+    }
 
     setSubmitting(true);
     try {
@@ -104,30 +194,30 @@ const Auth = () => {
         } else {
           toast.error(result.error || 'Invalid credentials');
         }
+        return;
+      }
+
+      if (password.length < PASSWORD_MIN_LENGTH) {
+        toast.error(`Password must be at least ${PASSWORD_MIN_LENGTH} characters`);
+        return;
+      }
+      if (!name.trim()) {
+        toast.error('Please enter your full name');
+        return;
+      }
+
+      const result = await signup(name, email, password, role);
+      if (result.success) {
+        if (result.needsEmailVerification) {
+          toast.success('Account created. Please verify your email before signing in.');
+          setAuthMode('login');
+          return;
+        }
+
+        toast.success('Account created successfully!');
+        navigate('/dashboard');
       } else {
-        // Signup
-        if (password.length < PASSWORD_MIN_LENGTH) {
-          toast.error(`Password must be at least ${PASSWORD_MIN_LENGTH} characters`);
-          return;
-        }
-        if (!name.trim()) {
-          toast.error('Please enter your full name');
-          return;
-        }
-
-        const result = await signup(name, email, password, role);
-        if (result.success) {
-          if (result.needsEmailVerification) {
-            toast.success('Account created. Please verify your email before signing in.');
-            setAuthMode('login');
-            return;
-          }
-
-          toast.success('Account created successfully!');
-          navigate('/dashboard');
-        } else {
-          toast.error(result.error || 'Signup failed');
-        }
+        toast.error(result.error || 'Signup failed');
       }
     } finally {
       setSubmitting(false);
@@ -143,68 +233,26 @@ const Auth = () => {
 
     setSubmitting(true);
     try {
-      // FIX: pass clean base URL — no query params.
-      // The edge function appends ?token_hash=... itself.
-      const redirectTo = `${window.location.origin}/auth`;
-
+      const normalizedEmail = email.trim().toLowerCase();
       const result = await passwordRecoveryService.currentProvider.requestReset(
-        email.trim(),
-        redirectTo,
+        normalizedEmail,
+        getPasswordResetRedirectUrl(),
       );
 
       if (result.success) {
         const cooldown = result.cooldownSeconds ?? 60;
         setRecoveryCooldownUntil(Date.now() + cooldown * 1000);
-        setMode('verify');
-        toast.success(
-          'If an account exists for that email, a recovery code has been sent.',
-        );
+        setRecoveryRequestedForEmail(normalizedEmail);
+        console.info('[password-reset] Reset email requested successfully', {
+          email: normalizedEmail,
+          cooldown,
+        });
+        toast.success('If an account exists for that email, a password reset link has been sent.');
         return;
       }
 
+      console.error('[password-reset] Reset request failed', result);
       toast.error(result.error || 'We could not start password recovery right now.');
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  const handleVerifyRecoveryCode = async () => {
-    if (submitting) return;
-    if (!email.trim() || !recoveryCode.trim()) {
-      toast.error('Enter your email and recovery code');
-      return;
-    }
-    if (password.length < PASSWORD_MIN_LENGTH) {
-      toast.error(`Password must be at least ${PASSWORD_MIN_LENGTH} characters`);
-      return;
-    }
-    if (password !== confirmPassword) {
-      toast.error('Passwords do not match');
-      return;
-    }
-
-    setSubmitting(true);
-    try {
-      const verifyResult = await passwordRecoveryService.currentProvider.verifyCode(
-        email.trim(),
-        recoveryCode.trim(),
-      );
-      if (!verifyResult.success) {
-        toast.error(verifyResult.error || 'The recovery code is invalid or expired.');
-        return;
-      }
-
-      const resetResult = await passwordRecoveryService.currentProvider.updatePassword(password);
-      if (!resetResult.success) {
-        toast.error(resetResult.error || 'Password could not be updated.');
-        return;
-      }
-
-      toast.success('Password updated successfully. Please sign in with your new password.');
-      setRecoveryCode('');
-      setConfirmPassword('');
-      setPassword('');
-      setAuthMode('login');
     } finally {
       setSubmitting(false);
     }
@@ -229,15 +277,19 @@ const Auth = () => {
     try {
       const result = await passwordRecoveryService.currentProvider.updatePassword(password);
       if (!result.success) {
+        console.error('[password-reset] Password update failed', result);
         toast.error(result.error || 'Password could not be updated.');
         return;
       }
 
-      toast.success('Password updated successfully. Please sign in with your new password.');
+      if (typeof window !== 'undefined') {
+        window.sessionStorage.removeItem(RECOVERY_SESSION_KEY);
+      }
       setPassword('');
       setConfirmPassword('');
       setSearchParams({});
       setAuthMode('login');
+      toast.success('Password updated successfully. Please sign in with your new password.');
     } finally {
       setSubmitting(false);
     }
@@ -253,11 +305,10 @@ const Auth = () => {
   const passwordInputClass =
     'w-full pl-11 pr-11 py-3 rounded-xl bg-secondary/80 border border-border text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors';
 
-  const isLogin  = mode === 'login';
+  const isLogin = mode === 'login';
   const isSignup = mode === 'signup';
   const isForgot = mode === 'forgot';
-  const isVerify = mode === 'verify';
-  const isReset  = mode === 'reset';
+  const isReset = mode === 'reset';
 
   return (
     <div className="min-h-screen px-4 pb-10 pt-24 md:pt-28">
@@ -275,18 +326,16 @@ const Auth = () => {
                     <Home className="h-6 w-6 text-primary-foreground" />
                   </div>
                   <h1 className="font-heading text-3xl font-bold">
-                    {isLogin  && 'Welcome back'}
+                    {isLogin && 'Welcome back'}
                     {isSignup && 'Create your account'}
                     {isForgot && 'Forgot your password?'}
-                    {isVerify && 'Verify your recovery code'}
-                    {isReset  && 'Set a new password'}
+                    {isReset && 'Set a new password'}
                   </h1>
                   <p className="mt-2 text-sm text-muted-foreground">
-                    {isLogin  && 'Sign in to continue managing rooms, bookings, and payments.'}
+                    {isLogin && 'Sign in to continue managing rooms, bookings, and payments.'}
                     {isSignup && 'Start exploring or list your room with a verified workflow.'}
-                    {isForgot && 'Enter your email to receive a secure recovery code and reset instructions.'}
-                    {isVerify && 'Enter the recovery code from your email and choose a new password.'}
-                    {isReset  && 'Your recovery link is verified. Choose a new password to finish account recovery.'}
+                    {isForgot && 'Enter your email to receive a secure password reset link.'}
+                    {isReset && 'Your recovery link is verified. Choose a new password to finish account recovery.'}
                   </p>
                 </div>
 
@@ -323,7 +372,7 @@ const Auth = () => {
                     </>
                   )}
 
-                  {(isLogin || isSignup || isForgot || isVerify) && (
+                  {(isLogin || isSignup || isForgot) && (
                     <div className="relative">
                       <Mail className="absolute left-3 top-3 h-5 w-5 text-muted-foreground" />
                       <input
@@ -337,7 +386,7 @@ const Auth = () => {
                     </div>
                   )}
 
-                  {(isLogin || isSignup || isVerify || isReset) && (
+                  {(isLogin || isSignup || isReset) && (
                     <div className="relative">
                       <Lock className="absolute left-3 top-3 h-5 w-5 text-muted-foreground" />
                       <input
@@ -358,7 +407,7 @@ const Auth = () => {
                     </div>
                   )}
 
-                  {(isVerify || isReset) && (
+                  {isReset && (
                     <div className="relative">
                       <Lock className="absolute left-3 top-3 h-5 w-5 text-muted-foreground" />
                       <input
@@ -379,29 +428,15 @@ const Auth = () => {
                     </div>
                   )}
 
-                  {isVerify && (
-                    <>
-                      <div className="relative">
-                        <KeyRound className="absolute left-3 top-3 h-5 w-5 text-muted-foreground" />
-                        <input
-                          type="text"
-                          placeholder="Recovery Code"
-                          value={recoveryCode}
-                          onChange={(e) => setRecoveryCode(e.target.value)}
-                          className={inputClass}
-                          required
-                        />
-                      </div>
-                      <div className="rounded-xl border border-border/70 bg-secondary/40 px-4 py-3 text-xs text-muted-foreground">
-                        If your code expires or does not arrive, request a fresh one. Recovery
-                        requests are rate-limited for security.
-                      </div>
-                    </>
+                  {isForgot && recoveryRequestedForEmail && (
+                    <div className="rounded-xl border border-border/70 bg-secondary/40 px-4 py-3 text-xs text-muted-foreground">
+                      Reset instructions have been requested for <span className="font-medium text-foreground">{recoveryRequestedForEmail}</span>. Check your inbox and spam folder, then open the secure link to continue.
+                    </div>
                   )}
 
                   {isReset && verifyingRecovery && (
                     <div className="rounded-xl border border-border/70 bg-secondary/40 px-4 py-3 text-sm text-muted-foreground">
-                      Verifying your recovery link…
+                      Verifying your recovery link...
                     </div>
                   )}
 
@@ -410,12 +445,11 @@ const Auth = () => {
                     disabled={submitting || (isReset && verifyingRecovery)}
                     className="btn-neon w-full disabled:opacity-60"
                   >
-                    {submitting                          && 'Please wait…'}
-                    {!submitting && isLogin              && 'Sign In'}
-                    {!submitting && isSignup             && 'Create Account'}
-                    {!submitting && isForgot             && 'Send Recovery Code'}
-                    {!submitting && isVerify             && 'Verify Code and Reset Password'}
-                    {!submitting && isReset              && 'Update Password'}
+                    {submitting && 'Please wait...'}
+                    {!submitting && isLogin && 'Sign In'}
+                    {!submitting && isSignup && 'Create Account'}
+                    {!submitting && isForgot && 'Send Reset Link'}
+                    {!submitting && isReset && 'Update Password'}
                   </button>
                 </form>
 
@@ -430,10 +464,10 @@ const Auth = () => {
                   </div>
                 )}
 
-                {isVerify && (
+                {isForgot && recoveryRequestedForEmail && (
                   <div className="mt-4 flex items-center justify-between gap-3 text-sm">
                     <button
-                      onClick={() => setAuthMode('forgot')}
+                      onClick={() => setRecoveryRequestedForEmail('')}
                       className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground"
                     >
                       <ArrowLeft className="h-4 w-4" /> Change email
@@ -443,7 +477,7 @@ const Auth = () => {
                       disabled={cooldownSeconds > 0 || submitting}
                       className="font-medium text-primary hover:underline disabled:opacity-50"
                     >
-                      {cooldownSeconds > 0 ? `Resend in ${cooldownSeconds}s` : 'Resend code'}
+                      {cooldownSeconds > 0 ? `Resend in ${cooldownSeconds}s` : 'Resend link'}
                     </button>
                   </div>
                 )}

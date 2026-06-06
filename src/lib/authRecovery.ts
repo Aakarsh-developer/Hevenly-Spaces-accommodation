@@ -1,99 +1,112 @@
 import { supabase } from '@/integrations/supabase/client';
-import { invokeEdgeFunction } from '@/lib/edgeFunctions';
+import { formatAuthError } from '@/lib/authErrors';
 
 export interface RecoveryActionResult {
   success: boolean;
   error?: string;
   cooldownSeconds?: number;
+  details?: unknown;
 }
 
 interface PasswordResetProvider {
   requestReset: (email: string, redirectTo?: string) => Promise<RecoveryActionResult>;
-  verifyCode: (email: string, token: string) => Promise<RecoveryActionResult>;
-  verifyTokenHash: (tokenHash: string) => Promise<RecoveryActionResult>;
   updatePassword: (newPassword: string) => Promise<RecoveryActionResult>;
 }
 
-const recoveryErrorMessage = 'This recovery link or code is invalid or has expired. Please request a new one.';
+const RECOVERY_EMAIL_COOLDOWN_SECONDS = 60;
+const PASSWORD_RESET_PATH = '/auth?mode=reset';
+
+const buildSafeRedirectUrl = (redirectTo?: string) => {
+  if (typeof window === 'undefined') return redirectTo;
+
+  const fallback = new URL(PASSWORD_RESET_PATH, window.location.origin).toString();
+  if (!redirectTo) return fallback;
+
+  try {
+    const candidate = new URL(redirectTo, window.location.origin);
+    if (candidate.origin !== window.location.origin) {
+      console.warn('[password-reset] Rejected cross-origin redirect URL', { redirectTo });
+      return fallback;
+    }
+
+    return candidate.toString();
+  } catch (error) {
+    console.error('[password-reset] Invalid redirect URL provided', { redirectTo, error });
+    return fallback;
+  }
+};
+
+export const getPasswordResetRedirectUrl = () => {
+  if (typeof window === 'undefined') return PASSWORD_RESET_PATH;
+  return new URL(PASSWORD_RESET_PATH, window.location.origin).toString();
+};
 
 const emailRecoveryProvider: PasswordResetProvider = {
   async requestReset(email, redirectTo) {
+    const normalizedEmail = email.trim().toLowerCase();
+    const safeRedirectTo = buildSafeRedirectUrl(redirectTo);
+    console.info('[password-reset] Requesting Supabase password reset email', {
+      email: normalizedEmail,
+      redirectTo: safeRedirectTo,
+    });
+
     try {
-      const result = await invokeEdgeFunction<
-        { email: string; redirectTo?: string },
-        { success: boolean; error?: string; cooldownSeconds?: number }
-      >('send-password-reset-email', {
-        mode: 'public',
-        body: { email, redirectTo },
+      const { error } = await supabase.auth.resetPasswordForEmail(normalizedEmail, {
+        redirectTo: safeRedirectTo,
       });
 
-      if (!result.success) {
-        console.error('[auth-recovery] Reset request invoke failed', result);
+      if (error) {
+        console.error('[password-reset] Supabase resetPasswordForEmail failed', error);
         return {
           success: false,
-          error: result.error || 'Password recovery request could not be started.',
+          error: formatAuthError(
+            error,
+            'We could not send a password reset email right now. Please try again shortly.',
+          ),
+          details: error,
         };
       }
 
-      const data = result.data;
-      if (data && data.success === false) {
-        console.error('[auth-recovery] Reset request reported failure', data);
-        return {
-          success: false,
-          error: data.error || 'Password recovery request could not be started.',
-        };
-      }
+      console.info('[password-reset] Supabase recovery email requested successfully', {
+        email: normalizedEmail,
+      });
 
       return {
         success: true,
-        cooldownSeconds: typeof data?.cooldownSeconds === 'number' ? data.cooldownSeconds : 60,
+        cooldownSeconds: RECOVERY_EMAIL_COOLDOWN_SECONDS,
       };
     } catch (error) {
-      console.error('[auth-recovery] Reset request failed', error);
-      return { success: false, error: 'We could not start password recovery right now. Please try again shortly.' };
+      console.error('[password-reset] Unexpected reset request failure', error);
+      return {
+        success: false,
+        error: 'We could not send a password reset email right now. Please try again shortly.',
+        details: error,
+      };
     }
-  },
-
-  async verifyCode(email, token) {
-    const { error } = await supabase.auth.verifyOtp({
-      email,
-      token,
-      type: 'recovery',
-    });
-
-    if (error) {
-      console.error('[auth-recovery] OTP verification failed', error);
-      return { success: false, error: recoveryErrorMessage };
-    }
-
-    console.info('[auth-recovery] OTP verification succeeded', { email });
-    return { success: true };
-  },
-
-  async verifyTokenHash(tokenHash) {
-    const { error } = await supabase.auth.verifyOtp({
-      token_hash: tokenHash,
-      type: 'recovery',
-    });
-
-    if (error) {
-      console.error('[auth-recovery] Token hash verification failed', error);
-      return { success: false, error: recoveryErrorMessage };
-    }
-
-    console.info('[auth-recovery] Token hash verification succeeded');
-    return { success: true };
   },
 
   async updatePassword(newPassword) {
+    console.info('[password-reset] Updating user password');
     const { error } = await supabase.auth.updateUser({ password: newPassword });
     if (error) {
-      console.error('[auth-recovery] Password update failed', error);
-      return { success: false, error: error.message || 'We could not update your password. Please request a fresh reset and try again.' };
+      console.error('[password-reset] Password update failed', error);
+      return {
+        success: false,
+        error: formatAuthError(
+          error,
+          'We could not update your password. Please request a fresh reset and try again.',
+        ),
+        details: error,
+      };
+    }
+
+    const { error: refreshError } = await supabase.auth.refreshSession();
+    if (refreshError) {
+      console.warn('[password-reset] Session refresh after password update failed', refreshError);
     }
 
     await supabase.auth.signOut();
-    console.info('[auth-recovery] Password update succeeded and user was signed out');
+    console.info('[password-reset] Password update succeeded and recovery session was cleared');
     return { success: true };
   },
 };

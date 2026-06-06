@@ -9,11 +9,12 @@ enable_confirmations = true
 subject = "Verify your Havenly Spaces account"
 content_path = "./supabase/templates/confirmation.html"
 
+[auth.email.template.recovery]
+subject = "Reset your Havenly Spaces password"
+content_path = "./supabase/templates/recovery.html"
+
 [functions.send-welcome-email]
 verify_jwt = false
 
 [functions.send-admin-new-user-email]
-verify_jwt = false
-
-[functions.send-password-reset-email]
 verify_jwt = false

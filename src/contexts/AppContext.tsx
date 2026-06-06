@@ -1278,7 +1278,17 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const updateProfile = async (updates: { name: string; avatar_url?: string; mobile_number?: string; upi_id?: string; bio?: string }) => {
-    if (!user || !profile) return { success: false, error: 'You must be signed in to update your profile.' };
+    if (!user) return { success: false, error: 'You must be signed in to update your profile.' };
+
+    let activeProfile = profile;
+    if (!activeProfile) {
+      console.warn('[profile] Missing in-memory profile before update. Attempting recovery.', { userId: user.id });
+      const ensuredProfile = await fetchProfile(user.id);
+      if (!ensuredProfile) {
+        return { success: false, error: 'Your profile is still loading. Please try again in a moment.' };
+      }
+      activeProfile = ensuredProfile;
+    }
 
     const mobileNumber = updates.mobile_number?.trim().replace(/[\s-]+/g, '') || '';
     const upiId = updates.upi_id?.trim() || '';
@@ -1288,18 +1298,42 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     if (!isValidMobileNumber(mobileNumber)) {
       return { success: false, error: 'Enter a valid Indian mobile number such as 9876543210 or +919876543210.' };
     }
-    if (profile.role === 'owner' && !isValidUpiId(upiId)) return { success: false, error: 'Enter a valid UPI ID such as owner@upi.' };
+    if (activeProfile.role === 'owner' && upiId && !isValidUpiId(upiId)) {
+      return { success: false, error: 'Enter a valid UPI ID such as owner@upi.' };
+    }
+
+    const { error: ensureError } = await supabase.rpc('ensure_user_profile', {});
+    if (ensureError) {
+      console.error('[supabase] ensure_user_profile failed before update', { userId: user.id, ensureError });
+      return {
+        success: false,
+        error: formatSupabaseError(ensureError, 'Your profile could not be initialized for update.'),
+      };
+    }
 
     const payload = {
       name: fullName,
       full_name: fullName,
-      avatar_url: updates.avatar_url ?? profile.avatar_url ?? null,
+      avatar_url: updates.avatar_url ?? activeProfile.avatar_url ?? null,
       mobile_number: mobileNumber,
-      upi_id: profile.role === 'owner' ? upiId : null,
+      upi_id: activeProfile.role === 'owner' ? (upiId || null) : null,
       bio: bio || null,
     };
 
-    console.info('[profile] Updating profile', { userId: user.id, payload });
+    console.info('[profile] Updating profile', {
+      userId: user.id,
+      role: activeProfile.role,
+      payload,
+    });
+    if (activeProfile.role === 'owner') {
+      console.info('[owner-profile] Owner profile update requested', {
+        userId: user.id,
+        hasAvatar: Boolean(payload.avatar_url),
+        hasBio: Boolean(payload.bio),
+        hasMobileNumber: Boolean(payload.mobile_number),
+        hasUpiId: Boolean(payload.upi_id),
+      });
+    }
     const { data, error } = await supabase
       .from('profiles')
       .update(payload)
@@ -1308,22 +1342,29 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       .maybeSingle();
     if (error) {
       console.error('[profile] Update failed', error);
+      if (activeProfile.role === 'owner') {
+        console.error('[owner-profile] Owner profile update failed', error);
+      }
       return { success: false, error: formatSupabaseError(error, 'Profile update failed.') };
     }
     if (!data) {
       console.error('[profile] Update returned no row', { userId: user.id });
+      if (activeProfile.role === 'owner') {
+        console.error('[owner-profile] Owner profile update returned no row', { userId: user.id });
+      }
       return { success: false, error: 'Profile update did not return updated data. Check RLS and select permissions.' };
     }
 
     const resolvedName = data?.full_name || data?.name || fullName;
-    setProfile((prev) => prev ? {
-      ...prev,
+    const nextProfile: Profile = {
+      ...activeProfile,
       name: resolvedName,
       avatar_url: data?.avatar_url || undefined,
       mobile_number: data?.mobile_number || undefined,
       upi_id: data?.upi_id || undefined,
       bio: data?.bio || undefined,
-    } : prev);
+    };
+    setProfile(nextProfile);
     setAllUsers((prev) => prev.map((item) => item.id === user.id ? {
       ...item,
       name: resolvedName,
@@ -1332,6 +1373,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       upi_id: data?.upi_id || undefined,
       bio: data?.bio || undefined,
     } : item));
+    console.info('[profile] Profile update succeeded', { userId: user.id, role: activeProfile.role });
+    if (activeProfile.role === 'owner') {
+      console.info('[owner-profile] Owner profile update succeeded', { userId: user.id });
+    }
     return { success: true };
   };
 
