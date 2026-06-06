@@ -24,7 +24,7 @@ const Contact = () => {
         </motion.div>
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
           <div className="lg:col-span-2 space-y-4">
-            {[{ icon: Mail, label: 'Email', value: 'support@roomfinder.com' }, { icon: Phone, label: 'Phone', value: '+91 98765 43210' }, { icon: MapPin, label: 'Office', value: 'Pune, India' }, { icon: Clock, label: 'Response', value: 'Within 24 hours' }].map((item, i) => (
+            {[{ icon: Mail, label: 'Email', value: 'HavenlyspacesSupport5@gmail.com' }, { icon: Phone, label: 'Phone', value: '+91 6268265637' }, { icon: MapPin, label: 'Office', value: 'Jabalpur, India' }, { icon: Clock, label: 'Response', value: 'Within 24 hours' }].map((item, i) => (
               <motion.div key={item.label} initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.1 }} className="glass p-5 flex items-start gap-4">
                 <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0"><item.icon className="w-5 h-5 text-primary" /></div>
                 <div><h3 className="font-heading font-semibold text-sm">{item.label}</h3><p className="text-sm">{item.value}</p></div>
