@@ -1,6 +1,6 @@
 import { motion, useScroll, useTransform, useSpring, AnimatePresence } from 'framer-motion';
 import { Link } from 'react-router-dom';
-import { Search, Shield, MapPin, MessageCircle, Star, Home, DoorOpen, CheckCircle2, ClipboardList, CreditCard, FileText, Zap, Users, TrendingUp, Clock, BadgeCheck } from 'lucide-react';
+import { Search, Shield, MapPin, MessageCircle, Star, Building2, DoorOpen, ClipboardList, CreditCard, FileText, Zap, Users, TrendingUp, Clock, BadgeCheck } from 'lucide-react';
 import RoomCard from '@/components/RoomCard';
 import { useApp } from '@/contexts/AppContext';
 import { useRef, useEffect, useState } from 'react';
@@ -223,13 +223,14 @@ const Index = () => {
                 initial="hidden"
                 animate="show"
                 custom={0}
-                className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-2 text-sm backdrop-blur-md"
+                className="inline-flex items-center gap-2 rounded-full border border-white/18 bg-white/10 px-4 py-2 text-sm shadow-[0_12px_40px_rgba(15,23,42,0.16)] backdrop-blur-md"
               >
                 <motion.span
-                  animate={{ rotate: [0, 12, -8, 0] }}
-                  transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
+                  animate={{ y: [0, -2, 0], scale: [1, 1.06, 1] }}
+                  transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
+                  className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-white/12"
                 >
-                  <Home className="w-4 h-4" />
+                  <Building2 className="w-3.5 h-3.5" />
                 </motion.span>
                 Trusted student housing across India
               </motion.div>
@@ -312,6 +313,35 @@ const Index = () => {
               </motion.div>
 
             </div>
+
+            <motion.div
+              initial={{ opacity: 0, x: 34 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.95, delay: 0.55, ease: [0.22, 1, 0.36, 1] }}
+              className="pointer-events-none absolute right-4 top-1/2 hidden w-[25rem] -translate-y-1/2 xl:block"
+            >
+              <div className="relative h-[28rem]">
+                <motion.div
+                  className="absolute right-0 top-0 h-[26rem] w-[21rem] rounded-[2.5rem] border border-white/14 bg-white/8 shadow-[0_30px_80px_rgba(8,15,28,0.22)] backdrop-blur-[18px]"
+                  animate={{ y: [0, -10, 0], rotate: [0, -1, 0] }}
+                  transition={{ duration: 14, repeat: Infinity, ease: 'easeInOut' }}
+                >
+                  <div className="absolute inset-x-8 top-8 h-px bg-gradient-to-r from-transparent via-white/45 to-transparent" />
+                  <div className="absolute left-8 top-16 h-24 w-[8.5rem] rounded-[1.4rem] border border-white/10 bg-white/10" />
+                  <div className="absolute right-8 top-20 h-20 w-24 rounded-[1.25rem] border border-white/10 bg-white/10" />
+                  <div className="absolute inset-x-8 bottom-10 h-16 rounded-[1.6rem] border border-white/10 bg-white/10" />
+                </motion.div>
+
+                <motion.div
+                  className="absolute bottom-6 left-0 w-[15rem] rounded-[1.75rem] border border-emerald-200/20 bg-white/10 px-5 py-4 shadow-[0_22px_60px_rgba(8,15,28,0.16)] backdrop-blur-md"
+                  animate={{ y: [0, 8, 0] }}
+                  transition={{ duration: 11, repeat: Infinity, ease: 'easeInOut' }}
+                >
+                  <p className="text-xs uppercase tracking-[0.24em] text-white/60">Platform clarity</p>
+                  <p className="mt-3 text-lg font-heading font-semibold text-white">Premium room discovery, cleaner than classifieds.</p>
+                </motion.div>
+              </div>
+            </motion.div>
           </div>
         </motion.div>
 
