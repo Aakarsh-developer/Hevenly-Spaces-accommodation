@@ -21,7 +21,7 @@ import FAQ from "./pages/FAQ";
 import NotFound from "./pages/NotFound";
 import SystemSetup from "./pages/SystemSetup";
 // import HavenlyCursor from "@/components/HavenlyCursor";
-import PixelSprites from "@/components/House";
+// import PixelSprites from "@/components/House";
 
 const queryClient = new QueryClient({
   defaultOptions: { queries: { retry: false } },
@@ -34,7 +34,7 @@ const App = () => (
         <Sonner />
         <BrowserRouter>
           <div className="flex min-h-screen flex-col">
-            <PixelSprites />
+            {/* <PixelSprites /> */}
             <Navbar />
             {/* <HavenlyCursor/> */}
             <main className="flex-1">

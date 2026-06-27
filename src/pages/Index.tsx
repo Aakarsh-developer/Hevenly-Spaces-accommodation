@@ -214,7 +214,7 @@ const Index = () => {
 
         {/* Parallax content wrapper */}
         <motion.div style={{ y: heroY, opacity: heroOpacity }} className="container mx-auto h-full px-4 relative">
-          <div className="min-h-[calc(100svh-4rem)] flex items-center">
+          <div className="flex min-h-[calc(100svh-4rem)] items-center py-8 sm:py-0">
             <div className="max-w-2xl text-white">
 
               {/* Badge */}
@@ -223,7 +223,7 @@ const Index = () => {
                 initial="hidden"
                 animate="show"
                 custom={0}
-                className="inline-flex items-center gap-2 rounded-full border border-white/18 bg-white/10 px-4 py-2 text-sm shadow-[0_12px_40px_rgba(15,23,42,0.16)] backdrop-blur-md"
+                className="inline-flex max-w-full items-center gap-2 rounded-full border border-white/18 bg-white/10 px-3 py-2 text-xs shadow-[0_12px_40px_rgba(15,23,42,0.16)] backdrop-blur-md sm:px-4 sm:text-sm"
               >
                 <motion.span
                   animate={{ y: [0, -2, 0], scale: [1, 1.06, 1] }}
@@ -241,7 +241,7 @@ const Index = () => {
                 initial="hidden"
                 animate="show"
                 custom={1}
-                className="mt-6 font-heading text-5xl md:text-7xl font-bold leading-[0.95]"
+                className="mt-6 font-heading text-4xl font-bold leading-[0.98] sm:text-5xl md:text-7xl"
               >
                 {['Find', 'Your', 'Dream', 'Room', 'Near', 'Campus', 'you', 'call', 'home.'].map((word, i) => (
                   <motion.span
@@ -262,7 +262,7 @@ const Index = () => {
                 initial="hidden"
                 animate="show"
                 custom={3}
-                className="mt-6 max-w-xl text-base md:text-lg text-white/82"
+                className="mt-6 max-w-xl text-sm text-white/82 sm:text-base md:text-lg"
               >
                 Explore approved rooms, review exact locations, complete secure payments, and move from booking request to agreement without the usual mess.
               </motion.p>
@@ -273,14 +273,14 @@ const Index = () => {
                 initial="hidden"
                 animate="show"
                 custom={4}
-                className="mt-8 flex flex-col sm:flex-row gap-4"
+                className="mt-8 flex flex-col gap-3 sm:flex-row sm:gap-4"
               >
-                <MagneticLink to="/rooms" className="btn-neon inline-flex items-center justify-center gap-2">
+                <MagneticLink to="/rooms" className="btn-neon inline-flex w-full items-center justify-center gap-2 sm:w-auto">
                   <Search className="w-4 h-4" /> Explore Rooms <DoorOpen className="w-4 h-4" />
                 </MagneticLink>
                 <MagneticLink
                   to="/auth"
-                  className="inline-flex items-center justify-center gap-2 rounded-xl border border-white/25 bg-white/10 px-6 py-3 font-heading font-semibold text-white backdrop-blur-md transition-colors hover:bg-white/16"
+                  className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-white/25 bg-white/10 px-6 py-3 font-heading font-semibold text-white backdrop-blur-md transition-colors hover:bg-white/16 sm:w-auto"
                 >
                   List Your Room
                 </MagneticLink>
@@ -292,7 +292,7 @@ const Index = () => {
                 initial="hidden"
                 animate="show"
                 custom={5}
-                className="mt-12 grid grid-cols-3 gap-6 max-w-xl"
+                className="mt-10 grid max-w-xl grid-cols-3 gap-3 sm:mt-12 sm:gap-6"
               >
                 {[
                   { num: '500', suffix: '+', label: 'Rooms listed' },
@@ -304,10 +304,10 @@ const Index = () => {
                     whileHover={{ scale: 1.06 }}
                     transition={{ type: 'spring', stiffness: 300, damping: 18 }}
                   >
-                    <p className="text-2xl md:text-3xl font-heading font-bold">
+                    <p className="text-xl font-heading font-bold sm:text-2xl md:text-3xl">
                       <AnimatedCounter target={stat.num} suffix={stat.suffix} />
                     </p>
-                    <p className="text-sm text-white/70">{stat.label}</p>
+                    <p className="text-xs text-white/70 sm:text-sm">{stat.label}</p>
                   </motion.div>
                 ))}
               </motion.div>
@@ -557,10 +557,10 @@ const Index = () => {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: '-60px' }}
             transition={{ duration: 0.6 }}
-            className="flex items-center justify-between mb-8"
+            className="mb-8 flex flex-col items-start gap-4 sm:flex-row sm:items-center sm:justify-between"
           >
             <div>
-              <h2 className="font-heading text-3xl font-bold">
+              <h2 className="font-heading text-2xl font-bold sm:text-3xl">
                 Featured <span className="gradient-text">Rooms</span>
               </h2>
               <p className="text-muted-foreground mt-1">Approved rooms ready for booking right now.</p>
@@ -570,6 +570,9 @@ const Index = () => {
               whileTap={{ scale: 0.96 }}
               transition={{ type: 'spring', stiffness: 300, damping: 20 }}
             >
+              <Link to="/rooms" className="btn-neon-outline inline-flex items-center gap-2 self-start text-sm py-2 md:hidden">
+                View All <DoorOpen className="w-4 h-4" />
+              </Link>
               <Link to="/rooms" className="btn-neon-outline text-sm py-2 hidden md:inline-flex items-center gap-2">
                 View All <DoorOpen className="w-4 h-4" />
               </Link>

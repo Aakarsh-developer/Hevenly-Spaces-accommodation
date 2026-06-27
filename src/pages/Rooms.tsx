@@ -56,7 +56,7 @@ const Rooms = () => {
           transition={{ delay: 0.1 }}
           className="glass p-4 mb-8"
         >
-          <div className="flex gap-3">
+          <div className="flex flex-col gap-3 sm:flex-row">
             <div className="flex-1 relative">
               <Search className="absolute left-3 top-3 w-5 h-5 text-muted-foreground" />
               <input
@@ -70,7 +70,7 @@ const Rooms = () => {
 
             <button
               onClick={() => setShowFilters(!showFilters)}
-              className={`px-4 py-3 rounded-xl border transition-all flex items-center gap-2 ${showFilters ? 'bg-primary text-primary-foreground border-primary' : 'bg-secondary border-border text-muted-foreground hover:text-foreground'}`}
+              className={`px-4 py-3 rounded-xl border transition-all flex items-center justify-center gap-2 sm:justify-start ${showFilters ? 'bg-primary text-primary-foreground border-primary' : 'bg-secondary border-border text-muted-foreground hover:text-foreground'}`}
             >
               <SlidersHorizontal className="w-4 h-4" /> Filters
             </button>
@@ -111,7 +111,7 @@ const Rooms = () => {
 
               <div>
                 <label className="text-sm font-medium mb-2 block">Room Type</label>
-                <div className="flex gap-2">
+                <div className="flex flex-wrap gap-2">
                   {['all', 'single', 'shared'].map((type) => (
                     <button
                       key={type}

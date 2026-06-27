@@ -30,8 +30,8 @@ const RoomLocationMap = ({ latitude, longitude, title, area, city }: RoomLocatio
           </Popup>
         </CircleMarker>
       </MapContainer>
-      <div className="flex items-center justify-between gap-3 bg-secondary px-4 py-3 text-xs text-muted-foreground">
-        <span>Location: {area}, {city} ({latitude.toFixed(4)}, {longitude.toFixed(4)})</span>
+      <div className="flex flex-col items-start gap-2 bg-secondary px-4 py-3 text-xs text-muted-foreground sm:flex-row sm:items-center sm:justify-between sm:gap-3">
+        <span className="break-words">Location: {area}, {city} ({latitude.toFixed(4)}, {longitude.toFixed(4)})</span>
         <a
           href={`https://www.google.com/maps/search/?api=1&query=${latitude},${longitude}`}
           target="_blank"

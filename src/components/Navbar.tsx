@@ -28,12 +28,12 @@ const Navbar = () => {
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 glass-strong">
-      <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-        <Link to="/" className="flex items-center gap-2">
+      <div className="container mx-auto flex h-16 items-center justify-between px-3 sm:px-4">
+        <Link to="/" className="flex min-w-0 items-center gap-2">
           <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-neon-purple flex items-center justify-center">
             <Home className="w-4 h-4 text-primary-foreground" />
           </div>
-          <span className="font-heading font-bold text-lg gradient-text">Havenly Spaces</span>
+          <span className="truncate font-heading text-base font-bold gradient-text sm:text-lg">Havenly Spaces</span>
         </Link>
 
         <div className="hidden md:flex items-center gap-1">
@@ -48,7 +48,7 @@ const Navbar = () => {
           ))}
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 sm:gap-3">
           {user && (
             <div className="relative">
               <button onClick={() => setNotifOpen(!notifOpen)} className="relative p-2 rounded-xl hover:bg-secondary transition-colors">
@@ -62,7 +62,7 @@ const Navbar = () => {
               <AnimatePresence>
                 {notifOpen && (
                   <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}
-                    className="absolute right-0 top-12 w-80 glass-strong rounded-2xl p-4 max-h-80 overflow-y-auto scrollbar-hide">
+                    className="absolute right-0 top-12 w-[min(20rem,calc(100vw-1rem))] glass-strong rounded-2xl p-4 max-h-80 overflow-y-auto scrollbar-hide sm:w-80">
                     <h3 className="font-heading font-semibold mb-3">Notifications</h3>
                     {notifications.length === 0 ? (
                       <p className="text-sm text-muted-foreground">No notifications</p>
@@ -94,7 +94,7 @@ const Navbar = () => {
               </button>
             </div>
           ) : (
-            <Link to="/auth" className="btn-neon text-sm py-2">Sign In</Link>
+            <Link to="/auth" className="btn-neon px-4 text-sm py-2 sm:px-6">Sign In</Link>
           )}
 
           <button onClick={() => setMobileOpen(!mobileOpen)} className="md:hidden p-2 rounded-xl hover:bg-secondary">

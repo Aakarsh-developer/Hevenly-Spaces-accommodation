@@ -158,11 +158,11 @@ const RoomCard = ({ room, index = 0 }: RoomCardProps) => {
         <h3 className="font-heading font-semibold text-base mb-1 line-clamp-1 group-hover:text-primary transition-colors">
           {room.title}
         </h3>
-        <div className="flex items-center gap-1 text-muted-foreground text-sm mb-2">
-          <MapPin className="w-3 h-3" />
-          <span>{room.area}, {room.city}</span>
+        <div className="mb-2 flex min-w-0 items-start gap-1 text-sm text-muted-foreground">
+          <MapPin className="mt-0.5 w-3 h-3 shrink-0" />
+          <span className="break-words">{room.area}, {room.city}</span>
         </div>
-        <div className="flex items-center gap-2 mb-3">
+        <div className="mb-3 flex flex-wrap items-center gap-2">
           {room.facilities.slice(0, 3).map((facility) => (
             <span key={facility} className="flex items-center gap-1 text-xs px-2 py-1 rounded-lg bg-secondary text-muted-foreground">
               {facilityIcons[facility] || null} {facility}
@@ -172,12 +172,12 @@ const RoomCard = ({ room, index = 0 }: RoomCardProps) => {
             <span className="text-xs text-muted-foreground">+{room.facilities.length - 3}</span>
           )}
         </div>
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <span className="text-xl font-heading font-bold gradient-text">Rs{room.price.toLocaleString()}</span>
             <span className="text-xs text-muted-foreground">/month</span>
           </div>
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-1 self-start sm:self-auto">
             <Star className="w-4 h-4 fill-amber-400 text-amber-400" />
             <span className="text-sm font-medium">{room.rating}</span>
             <span className="text-xs text-muted-foreground">({room.reviewCount})</span>

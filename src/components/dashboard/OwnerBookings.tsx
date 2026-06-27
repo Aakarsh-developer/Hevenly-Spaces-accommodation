@@ -200,10 +200,10 @@ const OwnerBookings = () => {
           <div className="flex flex-wrap items-center gap-2">
             {isPending ? (
               <>
-                <motion.button whileTap={{ scale: 0.9 }} onClick={() => void handleBookingStatus(booking.id, 'accepted')} className="flex items-center gap-1 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm text-emerald-700 transition-colors hover:bg-emerald-100">
+                <motion.button whileTap={{ scale: 0.9 }} onClick={() => void handleBookingStatus(booking.id, 'accepted')} className="flex w-full items-center justify-center gap-1 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm text-emerald-700 transition-colors hover:bg-emerald-100 sm:w-auto">
                   <Check className="h-4 w-4" /> Accept
                 </motion.button>
-                <motion.button whileTap={{ scale: 0.9 }} onClick={() => void handleBookingStatus(booking.id, 'rejected')} className="flex items-center gap-1 rounded-xl border border-red-200 bg-red-50 px-4 py-2 text-sm text-red-700 transition-colors hover:bg-red-100">
+                <motion.button whileTap={{ scale: 0.9 }} onClick={() => void handleBookingStatus(booking.id, 'rejected')} className="flex w-full items-center justify-center gap-1 rounded-xl border border-red-200 bg-red-50 px-4 py-2 text-sm text-red-700 transition-colors hover:bg-red-100 sm:w-auto">
                   <X className="h-4 w-4" /> Reject
                 </motion.button>
               </>
@@ -213,7 +213,7 @@ const OwnerBookings = () => {
               </span>
             )}
             {isActive && (
-              <button onClick={() => void handleCompleteStay(booking.id)} disabled={completingBookingId === booking.id} className="btn-neon-outline text-sm disabled:opacity-60">
+              <button onClick={() => void handleCompleteStay(booking.id)} disabled={completingBookingId === booking.id} className="btn-neon-outline w-full text-sm disabled:opacity-60 sm:w-auto">
                 {completingBookingId === booking.id ? 'Completing...' : 'Tenant Left / Complete Stay'}
               </button>
             )}
@@ -297,7 +297,7 @@ const OwnerBookings = () => {
                 onChange={(e) => setRequestDueDates((prev) => ({ ...prev, [booking.id]: e.target.value }))}
                 className="rounded-xl border border-border bg-background/60 px-4 py-3 text-sm"
               />
-              <button onClick={() => void handleCreateMonthlyRequest(booking.id)} className="flex items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2 text-sm text-primary-foreground transition-colors hover:bg-primary/90">
+              <button onClick={() => void handleCreateMonthlyRequest(booking.id)} className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2 text-sm text-primary-foreground transition-colors hover:bg-primary/90 md:w-auto">
                 <CreditCard className="h-4 w-4" /> Send Monthly Request
               </button>
             </div>

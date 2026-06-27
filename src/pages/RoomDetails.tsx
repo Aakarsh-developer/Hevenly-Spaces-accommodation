@@ -171,7 +171,7 @@ const RoomDetails = () => {
           <ChevronLeft className="w-4 h-4" /> Back
         </button>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-3 lg:gap-8">
           <div className="lg:col-span-2 space-y-6">
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="relative rounded-2xl overflow-hidden h-64 md:h-96">
               <img src={room.images[imgIdx] || 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=800'} alt={room.title} className="w-full h-full object-cover" />
@@ -203,10 +203,10 @@ const RoomDetails = () => {
               </div>
             )}
 
-            <div className="glass p-6">
-              <div className="flex items-start justify-between mb-4">
+            <div className="glass p-4 sm:p-6">
+              <div className="mb-4 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                 <div>
-                  <div className="flex items-center gap-2 mb-2">
+                  <div className="mb-2 flex flex-wrap items-center gap-2">
                     <span className={`px-3 py-1 rounded-full text-xs font-semibold ${room.status === 'available' ? 'status-available' : 'status-occupied'}`}>
                       {room.status}
                     </span>
@@ -217,14 +217,14 @@ const RoomDetails = () => {
                       </span>
                     )}
                   </div>
-                  <h1 className="font-heading text-2xl font-bold mb-1">{room.title}</h1>
-                  <div className="flex items-center gap-1 text-muted-foreground">
-                    <MapPin className="w-4 h-4" />
+                  <h1 className="mb-1 font-heading text-2xl font-bold">{room.title}</h1>
+                  <div className="flex flex-wrap items-center gap-1 text-muted-foreground">
+                    <MapPin className="h-4 w-4 shrink-0" />
                     <span>{room.area}, {room.city}</span>
-                    {room.college && <span className="ml-2 text-primary">• {room.college}</span>}
+                    {room.college && <span className="text-primary sm:ml-2">• {room.college}</span>}
                   </div>
                 </div>
-                <div className="flex items-center gap-1">
+                <div className="flex items-center gap-1 self-start">
                   <Star className="w-5 h-5 fill-amber-400 text-amber-400" />
                   <span className="font-heading font-bold">{room.rating.toFixed(1)}</span>
                   <span className="text-sm text-muted-foreground">({room.reviewCount})</span>
@@ -233,7 +233,7 @@ const RoomDetails = () => {
               <p className="text-muted-foreground mb-6">{room.description}</p>
 
               <h3 className="font-heading font-semibold mb-3">Facilities</h3>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+              <div className="mb-6 grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-4">
                 {room.facilities.map((facility) => (
                   <div key={facility} className="flex items-center gap-2 p-3 rounded-xl bg-secondary">
                     <span className="text-primary">{facilityIconMap[facility] || <Wifi className="w-5 h-5" />}</span>
@@ -269,8 +269,8 @@ const RoomDetails = () => {
               )}
             </div>
 
-            <div className="glass p-6 space-y-6">
-              <div className="flex items-center justify-between">
+            <div className="glass space-y-6 p-4 sm:p-6">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                   <h2 className="font-heading text-xl font-semibold">Reviews</h2>
                   <p className="text-sm text-muted-foreground">{room.reviewCount} review{room.reviewCount !== 1 ? 's' : ''}</p>
@@ -282,8 +282,8 @@ const RoomDetails = () => {
               </div>
 
               {profile?.role === 'student' && acceptedBooking && (
-                <form onSubmit={handleReviewSubmit} className="rounded-2xl bg-secondary/50 p-4 space-y-4">
-                  <div className="flex items-center justify-between">
+                <form onSubmit={handleReviewSubmit} className="space-y-4 rounded-2xl bg-secondary/50 p-4">
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                     <h3 className="font-heading font-semibold">{existingReview ? 'Update Your Review' : 'Write a Review'}</h3>
                     <div className="flex gap-1">
                       {[1, 2, 3, 4, 5].map((value) => (
@@ -317,7 +317,7 @@ const RoomDetails = () => {
                 <div className="space-y-4">
                   {roomReviews.map((review) => (
                     <div key={review.id} className="rounded-2xl border border-border p-4">
-                      <div className="flex items-start justify-between gap-4 mb-2">
+                      <div className="mb-2 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                         <div>
                           <p className="font-medium">{review.student_name}</p>
                           <p className="text-xs text-muted-foreground">{new Date(review.created_at).toLocaleDateString()}</p>
@@ -337,7 +337,7 @@ const RoomDetails = () => {
           </div>
 
           <div className="space-y-4">
-            <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="glass-strong p-6 sticky top-24">
+            <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="glass-strong p-4 sm:p-6 lg:sticky lg:top-24">
               <div className="mb-6">
                 <span className="text-3xl font-heading font-bold gradient-text">Rs{room.price.toLocaleString()}</span>
                 <span className="text-muted-foreground">/month</span>

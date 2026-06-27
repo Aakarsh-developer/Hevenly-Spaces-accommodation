@@ -50,9 +50,9 @@ const Dashboard = () => {
 
   return (
     <div className="pt-20 pb-10">
-      <div className="container mx-auto flex min-h-[calc(100svh-9rem)] flex-col px-4">
+      <div className="container mx-auto flex min-h-[calc(100svh-9rem)] flex-col px-3 sm:px-4">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-          <h1 className="font-heading text-3xl font-bold mb-1">
+          <h1 className="mb-1 font-heading text-2xl font-bold sm:text-3xl">
             {profile.role === 'owner' ? 'Owner' : 'Student'} <span className="gradient-text">Dashboard</span>
           </h1>
           <p className="text-muted-foreground mb-6">Welcome back, {profile.name}</p>
@@ -61,7 +61,7 @@ const Dashboard = () => {
         <div className="flex gap-2 mb-8 overflow-x-auto scrollbar-hide">
           {tabs.map(tab => (
             <button key={tab.id} onClick={() => setActiveTab(tab.id)}
-              className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-medium text-sm whitespace-nowrap transition-all ${
+              className={`flex items-center gap-2 rounded-xl px-3 py-2.5 text-xs font-medium whitespace-nowrap transition-all sm:px-4 sm:text-sm ${
                 activeTab === tab.id ? 'bg-primary text-primary-foreground neon-glow-sm' : 'bg-secondary text-muted-foreground hover:text-foreground'
               }`}>
               <tab.icon className="w-4 h-4" /> {tab.label}

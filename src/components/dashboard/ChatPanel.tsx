@@ -110,7 +110,7 @@ const ChatPanel = () => {
   };
 
   return (
-    <div className="grid w-full min-h-[32rem] grid-cols-1 gap-4 md:h-[min(68vh,42rem)] md:min-h-0 md:grid-cols-3">
+    <div className="grid w-full min-h-[32rem] grid-cols-1 gap-4 overflow-hidden md:h-[min(68vh,42rem)] md:min-h-0 md:grid-cols-3">
       <div className="glass flex min-h-[14rem] flex-col overflow-hidden">
         <div className="shrink-0 p-4 pb-3">
           <h3 className="mb-3 font-heading font-semibold">Conversations</h3>
@@ -172,7 +172,7 @@ const ChatPanel = () => {
               <div className="space-y-3">
                 {currentMessages.map((msg) => (
                   <motion.div key={msg.id} initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} className={`flex ${msg.sender_id === user?.id ? 'justify-end' : 'justify-start'}`}>
-                    <div className={`max-w-[75%] rounded-2xl px-4 py-2.5 text-sm ${msg.sender_id === user?.id ? 'rounded-br-md bg-gradient-to-r from-primary to-neon-purple text-primary-foreground' : 'rounded-bl-md bg-secondary text-foreground'}`}>
+                    <div className={`max-w-[85%] rounded-2xl px-4 py-2.5 text-sm sm:max-w-[75%] ${msg.sender_id === user?.id ? 'rounded-br-md bg-gradient-to-r from-primary to-neon-purple text-primary-foreground' : 'rounded-bl-md bg-secondary text-foreground'}`}>
                       {msg.sender_name && msg.sender_id !== user?.id && (
                         <p className="mb-1 text-[10px] font-medium opacity-70">{msg.sender_name}</p>
                       )}
@@ -195,7 +195,7 @@ const ChatPanel = () => {
                   onKeyDown={(e) => e.key === 'Enter' && void handleSend()}
                   className="flex-1 px-4 py-3 rounded-xl bg-secondary border border-border text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary transition-colors"
                 />
-                <motion.button whileTap={{ scale: 0.9 }} onClick={() => void handleSend()} className="p-3 rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 transition-colors">
+                <motion.button whileTap={{ scale: 0.9 }} onClick={() => void handleSend()} className="shrink-0 rounded-xl bg-primary p-3 text-primary-foreground transition-colors hover:bg-primary/90">
                   <Send className="w-5 h-5" />
                 </motion.button>
               </div>

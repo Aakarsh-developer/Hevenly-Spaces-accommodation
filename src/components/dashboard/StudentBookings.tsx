@@ -183,13 +183,13 @@ const StudentBookings = () => {
               </p>
             )}
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-col items-stretch gap-2 sm:flex-row sm:items-center">
             {isActive && booking.payment_status !== 'paid' && (
-              <button onClick={() => void handleInitialPayment(booking.id)} disabled={activeInitialPaymentId === booking.id} className="flex items-center gap-1 rounded-xl bg-primary px-4 py-2 text-sm text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-60">
+              <button onClick={() => void handleInitialPayment(booking.id)} disabled={activeInitialPaymentId === booking.id} className="flex w-full items-center justify-center gap-1 rounded-xl bg-primary px-4 py-2 text-sm text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-60 sm:w-auto">
                 <CreditCard className="h-4 w-4" /> {activeInitialPaymentId === booking.id ? 'Opening...' : 'Proceed to Payment'}
               </button>
             )}
-            <Link to={`/rooms/${booking.room_id}`} className="rounded-xl bg-secondary p-2 transition-colors hover:bg-secondary/80">
+            <Link to={`/rooms/${booking.room_id}`} className="flex items-center justify-center rounded-xl bg-secondary p-2 transition-colors hover:bg-secondary/80">
               <Eye className="h-4 w-4" />
             </Link>
           </div>
@@ -270,12 +270,12 @@ const StudentBookings = () => {
                         <p className="text-xs text-muted-foreground">Note: {request.note}</p>
                       )}
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex flex-col items-stretch gap-2 sm:flex-row sm:items-center">
                       <span className={`rounded-full px-3 py-1 text-xs font-semibold ${getPaymentBadgeClass(request.status)}`}>
                         {request.status}
                       </span>
                       {(request.status === 'pending' || request.status === 'failed') && (
-                        <button onClick={() => void handleMonthlyPayment(request.id)} disabled={activePaymentId === request.id} className="flex items-center gap-1 rounded-xl bg-primary px-3 py-2 text-sm text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-60">
+                        <button onClick={() => void handleMonthlyPayment(request.id)} disabled={activePaymentId === request.id} className="flex w-full items-center justify-center gap-1 rounded-xl bg-primary px-3 py-2 text-sm text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-60 sm:w-auto">
                           <CreditCard className="h-4 w-4" /> {activePaymentId === request.id ? 'Processing...' : 'Pay Rent'}
                         </button>
                       )}

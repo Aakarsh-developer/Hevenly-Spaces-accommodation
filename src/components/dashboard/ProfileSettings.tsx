@@ -75,7 +75,7 @@ const ProfileSettings = () => {
   return (
     <motion.section initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="glass overflow-hidden">
       <div className="grid items-stretch gap-0 xl:grid-cols-[minmax(0,1.05fr)_minmax(320px,0.95fr)]">
-        <form onSubmit={handleSave} className="space-y-6 p-6 md:p-8">
+        <form onSubmit={handleSave} className="space-y-6 p-4 sm:p-6 md:p-8">
           <div>
             <h2 className="mb-1 font-heading text-xl font-semibold">Profile Settings</h2>
             <p className="text-sm text-muted-foreground">Update your public profile information, photo, and account identity details.</p>
@@ -154,7 +154,7 @@ const ProfileSettings = () => {
             </div>
           )}
 
-          <button type="submit" disabled={saving || uploading} className="btn-neon inline-flex items-center gap-2 disabled:opacity-60">
+          <button type="submit" disabled={saving || uploading} className="btn-neon inline-flex w-full items-center justify-center gap-2 disabled:opacity-60 sm:w-auto">
             <Save className="h-4 w-4" />
             {saving ? 'Saving...' : 'Save Profile'}
           </button>
